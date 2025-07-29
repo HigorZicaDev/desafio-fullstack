@@ -16,17 +16,6 @@ class PaymentController extends Controller
         $this->paymentService = $paymentService;
     }
 
-    public function generatePix(Payment $payment)
-    {
-        $pixData = $this->paymentService->simulatePixPayment($payment);
-
-        return response()->json([
-            'success' => true,
-            'payment_data' => $pixData,
-            'payment' => $payment->fresh()
-        ]);
-    }
-
     public function confirmPayment(Payment $payment)
     {
         $this->paymentService->confirmPayment($payment);
@@ -41,16 +30,15 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function getPendingPayment()
+    public function getAllPendingPayment()
     {
         $user = auth()->user() ?? User::first();
         
-        $payment = Payment::whereHas('contract', function($query) use ($user) {
+        $payments = Payment::whereHas('contract', function($query) use ($user) {
             $query->where('user_id', $user->id)->where('is_active', true);
         })
-        ->where('status', 'pending')
         ->get();
 
-        return response()->json($payment);
+        return response()->json($payments);
     }
 }
