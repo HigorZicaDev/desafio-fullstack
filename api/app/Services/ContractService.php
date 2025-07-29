@@ -122,7 +122,7 @@ class ContractService
     {
         for ($i = 0; $i < $months; $i++) {
             $paymentAmount = $i === 0
-                ? max(0, $amount - $credit) // Primeiro com desconto
+                ? max(0, $amount - $credit)
                 : $amount;
 
             Payment::create([
