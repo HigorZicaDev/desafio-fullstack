@@ -26,3 +26,9 @@ Route::get('/', function () {
 Route::apiResource('plans', PlanController::class, ['only' => 'index']);
 
 Route::apiSingleton('user', UserController::class, ['only' => 'show']);
+
+Route::prefix('contracts')->group(function () {
+    Route::get('active', [ContractController::class, 'getActiveContract']);
+    Route::post('subscribe', [ContractController::class, 'subscribe']);
+    Route::post('change-plan', [ContractController::class, 'changePlan']);
+});
