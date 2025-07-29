@@ -32,3 +32,9 @@ Route::prefix('contracts')->group(function () {
     Route::post('subscribe', [ContractController::class, 'subscribe']);
     Route::post('change-plan', [ContractController::class, 'changePlan']);
 });
+
+Route::prefix('payments')->group(function () {
+    Route::get('pending', [PaymentController::class, 'getAllPendingPayment']);
+    Route::post('{payment}/generate-pix', [PaymentController::class, 'generatePix']);
+    Route::post('{payment}/confirm', [PaymentController::class, 'confirmPayment']);
+});

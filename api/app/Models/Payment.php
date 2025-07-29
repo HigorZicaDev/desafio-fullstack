@@ -23,7 +23,7 @@ class Payment extends Model
         'due_date' => 'datetime:Y-m-d\TH:i:sP',
         'paid_at' => 'datetime:Y-m-d\TH:i:sP',
         'payment_data' => 'array',
-        'amount' => 'decimal:2',
+        'amount' => 'float',
     ];
 
     public function contract()
