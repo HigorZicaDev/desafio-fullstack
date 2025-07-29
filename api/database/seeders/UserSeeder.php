@@ -18,6 +18,7 @@ class UserSeeder extends Seeder
         User::create([
             'name' => 'Usuário da Silva',
             'email' => 'usuario@silva.com',
+            'plan_change_count' => 0,
         ]);
     }
 }
