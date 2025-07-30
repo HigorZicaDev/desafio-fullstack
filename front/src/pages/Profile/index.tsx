@@ -1,5 +1,6 @@
 import { CreditCard, Check, User } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import LoadingSkeleton from '../../components/LoadingSkeleton';
 
 const features = [
     `Clientes ativos`,
@@ -11,6 +12,9 @@ const features = [
 const Profile = () => {
   
   const { user, currentPlan } = useApp();
+  const isLoading = !user || currentPlan === undefined;
+
+  if (isLoading) return <LoadingSkeleton />;
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">

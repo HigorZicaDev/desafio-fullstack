@@ -3,12 +3,14 @@ import { useApp } from '../../context/AppContext';
 import PlanCard, { PaymentModal } from '../../components/PlanCard';
 import { apiService, Contract } from '../../services/api';
 import { Plan } from '../../services/api';
+import LoadingSkeleton from '../../components/LoadingSkeleton';
 
 const Plans = () => {
   const { plans, currentPlan, setCurrentPlan, showNotification } = useApp();
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [activePlanId, setActivePlanId] = useState<number | null>(null);
+  const isLoading = plans.length === 0 && currentPlan === undefined;
 
   useEffect(() => {
     const fetchActiveContract = async () => {
@@ -19,7 +21,7 @@ const Plans = () => {
         setActivePlanId(contract.plan_id); 
         setCurrentPlan?.(contract.plan);
       } catch (error) {
-        setActivePlanId(null);
+        setActivePlanId(null); // Garante estado limpo
       }
     };
 
@@ -60,6 +62,7 @@ const Plans = () => {
   };
 
 
+  if (isLoading) return <LoadingSkeleton />;
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">

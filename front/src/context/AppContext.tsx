@@ -36,12 +36,22 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
-        const [plansRes, userRes] = await Promise.all([
+        const [plansRes, userRes, contractRes] = await Promise.all([
           apiService.getPlans(),
           apiService.getUser(),
+          apiService.getActiveContract()
         ]);
+
         setPlans(plansRes.data);
         setUser(userRes.data);
+
+        // Se houver contrato ativo, salva o plano atual
+        if (contractRes.data?.plan) {
+          setCurrentPlan(contractRes.data.plan);
+        } else {
+          setCurrentPlan(null); // Garante que não fica com dados velhos
+        }
+
       } catch (error) {
         showNotification('Erro ao carregar dados iniciais.', 'error');
         console.error(error);
@@ -52,6 +62,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
     fetchInitialData();
   }, []);
+
 
   const showNotification = (message: string, type: 'success' | 'warning' | 'error' = 'success') => {
     setNotification({ message, type });
