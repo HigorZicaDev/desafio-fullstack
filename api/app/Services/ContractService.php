@@ -53,7 +53,7 @@ class ContractService
             throw new \Exception('Limite de 2 trocas de plano por mês atingido.');
         }
 
-        // Atualiza contador table users para controle de trocas de plano de assinatura
+        // Atualiza contador
         if (
             $user->plan_change_last_date &&
             $user->plan_change_last_date->format('Y-m') === $currentMonth
@@ -74,6 +74,7 @@ class ContractService
             $activeContract->update(['is_active' => false]);
         }
 
+        // Cria novo contrato
         $newContract = Contract::create([
             'user_id' => $user->id,
             'plan_id' => $newPlan->id,
@@ -113,7 +114,8 @@ class ContractService
                 'contract_id' => $contract->id,
                 'amount' => $amount,
                 'due_date' => Carbon::today()->addMonths($i),
-                'status' => 'pending'
+                'status' => $i === 0 ? 'paid' : 'pending',
+                'paid_at' => $i === 0 ? Carbon::now() : null
             ]);
         }
     }
@@ -121,18 +123,36 @@ class ContractService
     private function generateFuturePaymentsWithCredit(Contract $contract, float $amount, float $credit, int $months = 12): void
     {
         for ($i = 0; $i < $months; $i++) {
-            $paymentAmount = $i === 0
-                ? max(0, $amount - $credit)
-                : $amount;
+            if ($i === 0) {
+                // Primeira parcela é sempre paga no momento da assinatura
+                $paymentAmount = $amount;
+                $status = 'paid';
+                $paidAt = Carbon::now();
+            } elseif ($i === 1) {
+                // Aplicar o crédito na segunda parcela
+                $paymentAmount = max(0, $amount - $credit);
+                if ($credit >= $amount) {
+                    // Crédito cobre o valor inteiro → marcar como pago
+                    $status = 'paid';
+                    $paidAt = Carbon::now();
+                } else {
+                    $status = 'pending';
+                    $paidAt = null;
+                }
+            } else {
+                $paymentAmount = $amount;
+                $status = 'pending';
+                $paidAt = null;
+            }
 
             Payment::create([
                 'contract_id' => $contract->id,
                 'amount' => $paymentAmount,
                 'due_date' => Carbon::today()->addMonths($i),
-                'status' => 'pending'
+                'status' => $status,
+                'paid_at' => $paidAt,
             ]);
         }
     }
-
 
 }
