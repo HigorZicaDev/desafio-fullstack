@@ -100,6 +100,7 @@ class ContractService
             ->first();
     }
 
+
     private function deactivateActiveContract(User $user): void
     {
         Contract::where('user_id', $user->id)

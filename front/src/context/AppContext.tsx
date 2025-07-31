@@ -2,7 +2,6 @@ import { createContext, useContext, useState, ReactNode, useEffect } from 'react
 import { Plan, User } from '../services/api';
 import { apiService } from '../services/api';
 
-
 export interface Notification {
   message: string;
   type: 'success' | 'warning' | 'error';
@@ -16,8 +15,8 @@ interface AppContextType {
   loading: boolean;
   notification: Notification | null;
   showNotification: (message: string, type?: 'success' | 'warning' | 'error') => void;
+  fetchCurrentContract: () => Promise<void>; // ✅ Nova função pública
 }
-
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -44,14 +43,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
         setPlans(plansRes.data);
         setUser(userRes.data);
-
-        // Se houver contrato ativo, salva o plano atual
-        if (contractRes.data?.plan) {
-          setCurrentPlan(contractRes.data.plan);
-        } else {
-          setCurrentPlan(null); // Garante que não fica com dados velhos
-        }
-
+        setCurrentPlan(contractRes.data?.plan || null);
       } catch (error) {
         showNotification('Erro ao carregar dados iniciais.', 'error');
         console.error(error);
@@ -63,10 +55,23 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     fetchInitialData();
   }, []);
 
-
-  const showNotification = (message: string, type: 'success' | 'warning' | 'error' = 'success') => {
+  const showNotification = (
+    message: string,
+    type: 'success' | 'warning' | 'error' = 'success'
+  ) => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
+  };
+
+  // ✅ Função reutilizável nas páginas para refetch do contrato
+  const fetchCurrentContract = async () => {
+    try {
+      const contract = await apiService.getActiveContract();
+      setCurrentPlan(contract.data?.plan || null);
+    } catch (error) {
+      showNotification('Erro ao atualizar plano.', 'error');
+      console.error(error);
+    }
   };
 
   const value: AppContextType = {
@@ -76,9 +81,9 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     setCurrentPlan,
     loading,
     notification,
-    showNotification
+    showNotification,
+    fetchCurrentContract // ✅ Adicionando no value
   };
-
 
   return (
     <AppContext.Provider value={value}>

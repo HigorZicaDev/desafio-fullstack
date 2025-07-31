@@ -1,6 +1,7 @@
 import { CreditCard, Check, User } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import LoadingSkeleton from '../../components/LoadingSkeleton';
+import { useEffect } from 'react';
 
 const features = [
     `Clientes ativos`,
@@ -11,8 +12,13 @@ const features = [
 
 const Profile = () => {
   
-  const { user, currentPlan } = useApp();
+  const { user, currentPlan, fetchCurrentContract } = useApp();
   const isLoading = !user || currentPlan === undefined;
+
+  
+  useEffect(() => {
+    fetchCurrentContract(); // 🔁 Garante dados atualizados toda vez que entra aqui
+  }, []);
 
   if (isLoading) return <LoadingSkeleton />;
 

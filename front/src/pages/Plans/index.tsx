@@ -6,26 +6,21 @@ import { Plan } from '../../services/api';
 import LoadingSkeleton from '../../components/LoadingSkeleton';
 
 const Plans = () => {
-  const { plans, currentPlan, setCurrentPlan, showNotification } = useApp();
+  const {
+    plans,
+    currentPlan,
+    setCurrentPlan,
+    showNotification,
+    fetchCurrentContract,
+    loading
+  } = useApp();
+
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [activePlanId, setActivePlanId] = useState<number | null>(null);
-  const isLoading = plans.length === 0 && currentPlan === undefined;
 
+  // Refaz o fetch quando o componente monta
   useEffect(() => {
-    const fetchActiveContract = async () => {
-      try {
-        const response = await apiService.getActiveContract();
-        const contract: Contract = response.data;
-        
-        setActivePlanId(contract.plan_id); 
-        setCurrentPlan?.(contract.plan);
-      } catch (error) {
-        setActivePlanId(null); // Garante estado limpo
-      }
-    };
-
-    fetchActiveContract();
+    fetchCurrentContract();
   }, []);
 
   const handlePlanSelect = (planId: number) => {
@@ -47,11 +42,7 @@ const Plans = () => {
         showNotification(`Plano ${selectedPlan.description} assinado com sucesso!`);
       }
 
-      // Refaz o fetch para atualizar o plano ativo
-      const response = await apiService.getActiveContract();
-      const contract: Contract = response.data;
-      setActivePlanId(contract.plan_id);
-      setCurrentPlan?.(contract.plan);
+      await fetchCurrentContract(); // ✅ Atualiza contexto com o novo plano
     } catch (error) {
       console.error('Erro ao atualizar plano após pagamento', error);
       showNotification('Ocorreu um erro ao processar o pagamento. Tente novamente.', 'error');
@@ -61,6 +52,7 @@ const Plans = () => {
     setSelectedPlan(null);
   };
 
+  const isLoading = loading || (plans.length === 0 && currentPlan === undefined);
 
   if (isLoading) return <LoadingSkeleton />;
 
@@ -80,7 +72,7 @@ const Plans = () => {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {plans.map((plan) => {
-          const isCurrent = activePlanId === plan.id;
+          const isCurrent = currentPlan?.id === plan.id;
           const actionType = !currentPlan 
             ? 'subscribe' 
             : isCurrent 
@@ -95,7 +87,6 @@ const Plans = () => {
               actionType={actionType}
               onSelect={() => handlePlanSelect(plan.id)}
             />
-
           );
         })}
       </div>

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\ContractController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;

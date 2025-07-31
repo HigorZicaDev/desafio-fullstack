@@ -23,6 +23,9 @@ class ContractController extends Controller
         $user = auth()->user() ?? User::first();
         $contract = $this->contractService->getActiveContract($user);
 
+        if (!$contract) {
+            return response()->json(['message' => 'No active contract found.'], 200);
+        }
         return response()->json($contract);
     }
 
