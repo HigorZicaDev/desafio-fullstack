@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import PlanCard, { PaymentModal } from '../../components/PlanCard';
-import { apiService, Contract } from '../../services/api';
+import { apiService } from '../../services/api';
 import { Plan } from '../../services/api';
 import LoadingSkeleton from '../../components/LoadingSkeleton';
+import axios from 'axios';
 
 const Plans = () => {
   const {
     plans,
     currentPlan,
-    setCurrentPlan,
     showNotification,
     fetchCurrentContract,
     loading
@@ -18,7 +18,6 @@ const Plans = () => {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  // Refaz o fetch quando o componente monta
   useEffect(() => {
     fetchCurrentContract();
   }, []);
@@ -42,11 +41,16 @@ const Plans = () => {
         showNotification(`Plano ${selectedPlan.description} assinado com sucesso!`);
       }
 
-      await fetchCurrentContract(); // ✅ Atualiza contexto com o novo plano
-    } catch (error) {
-      console.error('Erro ao atualizar plano após pagamento', error);
-      showNotification('Ocorreu um erro ao processar o pagamento. Tente novamente.', 'error');
-    }
+      await fetchCurrentContract();
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          console.error('Erro ao atualizar plano após pagamento', error.response?.data?.message);
+          showNotification(`Atenção: ${error.response?.data?.message || 'Erro inesperado'}`, 'error');
+        } else {
+          console.error('Erro desconhecido ao atualizar plano', error);
+          showNotification('Erro inesperado ao processar o pagamento.', 'error');
+        }
+      }
 
     setShowPaymentModal(false);
     setSelectedPlan(null);

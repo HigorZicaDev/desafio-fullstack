@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiService, Payment } from '../../services/api';
+import { useApp } from '@/context/AppContext';
+import axios from 'axios';
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return '—';
@@ -9,10 +11,10 @@ const formatDate = (dateString?: string) => {
 };
 
 const SignaturesPage = () => {
+  const { showNotification } = useApp();
   const [pendingPayments, setPendingPayments] = useState<Payment[]>([]);
   const [paidPayments, setPaidPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -22,9 +24,12 @@ const SignaturesPage = () => {
 
         setPendingPayments(allPayments.filter(p => p.status === 'pending'));
         setPaidPayments(allPayments.filter(p => p.status === 'paid'));
-      } catch (err: any) {
-        setError('Erro ao carregar os pagamentos.');
-        console.error(err);
+      } catch (error) {
+          if (axios.isAxiosError(error)) {
+            showNotification(`Atenção: ${error.response?.data?.message || 'Erro inesperado'}`, 'error');
+          } else {
+            showNotification('Erro inesperado ao carregar os pagamento.', 'error');
+          }
       } finally {
         setLoading(false);
       }
@@ -78,8 +83,7 @@ const SignaturesPage = () => {
       <h1 className="text-2xl font-bold mb-4">Resumo de Pagamentos</h1>
 
       {loading && <p className="text-gray-500">Carregando pagamentos...</p>}
-      {error && <p className="text-red-600">{error}</p>}
-
+      
       {!loading && (
         <>
           {renderPaymentGrid('Pagamentos Pendentes', pendingPayments)}

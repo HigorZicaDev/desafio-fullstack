@@ -20,7 +20,6 @@ class PaymentController extends Controller
     {
         $this->paymentService->confirmPayment($payment);
 
-        // Recarrega o modelo para garantir que está atualizado
         $payment->refresh();
 
         return response()->json([

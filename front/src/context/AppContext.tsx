@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Plan, User } from '../services/api';
 import { apiService } from '../services/api';
+import axios from 'axios';
 
 export interface Notification {
   message: string;
@@ -45,8 +46,11 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         setUser(userRes.data);
         setCurrentPlan(contractRes.data?.plan || null);
       } catch (error) {
-        showNotification('Erro ao carregar dados iniciais.', 'error');
-        console.error(error);
+        if (axios.isAxiosError(error)) {
+          showNotification(`Atenção: ${error.response?.data?.message || 'Erro inesperado'}`, 'error');
+        } else {
+          showNotification('Erro inesperado ao processar o pagamento.', 'error');
+        }
       } finally {
         setLoading(false);
       }
@@ -63,14 +67,16 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     setTimeout(() => setNotification(null), 3000);
   };
 
-  // ✅ Função reutilizável nas páginas para refetch do contrato
   const fetchCurrentContract = async () => {
     try {
       const contract = await apiService.getActiveContract();
       setCurrentPlan(contract.data?.plan || null);
     } catch (error) {
-      showNotification('Erro ao atualizar plano.', 'error');
-      console.error(error);
+      if (axios.isAxiosError(error)) {
+        showNotification(`Atenção: Erro ao carregar o plano}`, 'error');
+      } else {
+        showNotification('Erro desconhecido ao carregar o plano', 'error');
+      }
     }
   };
 
@@ -82,7 +88,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     loading,
     notification,
     showNotification,
-    fetchCurrentContract // ✅ Adicionando no value
+    fetchCurrentContract
   };
 
   return (

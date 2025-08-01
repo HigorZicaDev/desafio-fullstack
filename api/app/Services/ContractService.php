@@ -48,7 +48,7 @@ class ContractService
         if (
             $user->plan_change_last_date &&
             $user->plan_change_last_date->format('Y-m') === $currentMonth &&
-            $user->plan_change_count >= 2
+            $user->plan_change_count >= 1
         ) {
             throw new \Exception('Limite de 2 trocas de plano por mês atingido.');
         }
@@ -66,15 +66,12 @@ class ContractService
         $user->plan_change_last_date = $today;
         $user->save();
 
-        // Créditos restantes do plano anterior
         $remainingCredit = $activeContract?->calculateRemainingCredit() ?? 0;
 
-        // Desativa o contrato atual, se existir
         if ($activeContract) {
             $activeContract->update(['is_active' => false]);
         }
 
-        // Cria novo contrato
         $newContract = Contract::create([
             'user_id' => $user->id,
             'plan_id' => $newPlan->id,
@@ -85,7 +82,7 @@ class ContractService
             'remaining_credit' => $remainingCredit,
         ]);
 
-        // Cria os pagamentos com crédito aplicado
+        // Cria as parcelas futuras com crédito aplicado
         $this->generateFuturePaymentsWithCredit($newContract, $newPlan->price, $remainingCredit);
 
         return $newContract;
@@ -125,15 +122,15 @@ class ContractService
     {
         for ($i = 0; $i < $months; $i++) {
             if ($i === 0) {
-                // Primeira parcela é sempre paga no momento da assinatura
+                // Primeira parcela é sempre status 'paid' no momento da assinatura
                 $paymentAmount = $amount;
                 $status = 'paid';
                 $paidAt = Carbon::now();
             } elseif ($i === 1) {
-                // Aplicar o crédito na segunda parcela
+                // Aplicar o crédito na segunda parcela caso precisar
                 $paymentAmount = max(0, $amount - $credit);
                 if ($credit >= $amount) {
-                    // Crédito cobre o valor inteiro → marcar como pago
+                    // Se o crédito cobre o valor inteiro → alterar o status como 'paid'
                     $status = 'paid';
                     $paidAt = Carbon::now();
                 } else {

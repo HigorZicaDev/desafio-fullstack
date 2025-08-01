@@ -17,7 +17,7 @@ const Profile = () => {
 
   
   useEffect(() => {
-    fetchCurrentContract(); // 🔁 Garante dados atualizados toda vez que entra aqui
+    fetchCurrentContract();
   }, []);
 
   if (isLoading) return <LoadingSkeleton />;
